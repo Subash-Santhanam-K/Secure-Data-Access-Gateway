@@ -52,3 +52,6 @@ Thumbs.db
 # Logs
 # -----------------------------
 *.log
+
+# generated MFA QR codes
+static/qr_*.png

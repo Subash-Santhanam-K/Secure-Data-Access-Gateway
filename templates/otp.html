@@ -34,13 +34,13 @@
             <p class="auth-desc">A verification code has been generated. Enter it below to complete authentication.</p>
 
             <div class="alert info" style="margin-bottom: 1.5rem;">
-                <span class="alert-icon">💻</span>
-                <span>Check your terminal/console for the OTP code.</span>
+                <span class="alert-icon">📱</span>
+                <span>Enter the 6-digit code from your Authenticator App.</span>
             </div>
 
             <form action="/otp" method="POST">
                 <div>
-                    <label for="otp">One-Time Password</label>
+                    <label for="otp">Authenticator Code</label>
                     <input type="text" id="otp" name="otp" placeholder="000000" pattern="\d{6}" maxlength="6"
                         style="text-align: center; letter-spacing: 0.75em; font-size: 1.5rem; font-family: var(--font-mono);"
                         required>

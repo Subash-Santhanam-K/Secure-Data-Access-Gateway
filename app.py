@@ -4,6 +4,8 @@ import hashlib
 import os
 import random
 from datetime import datetime, timedelta
+import pyotp
+import qrcode
 from datetime import datetime, timedelta
 import crypto_utils
 import encoding_utils
@@ -111,24 +113,43 @@ def login():
                 session['email'] = user['email']
                 session['fullname'] = user['fullname']
                 
-                # generate OTP
-                try:
-                    otp = str(random.randint(100000, 999999))
-                    session["otp"] = otp
+                
+                # Check for 2FA Secret
+                # Rule: If Secret Missing OR 2FA not enabled -> Force Setup
+                if not user['totp_secret'] or user['twofa_enabled'] == 0:
+                    
+                    # If secret missing, generate one now
+                    if not user['totp_secret']:
+                        secret = pyotp.random_base32()
+                        encrypted_secret = crypto_utils.encrypt_text(secret)
+                        conn = get_db_connection()
+                        conn.execute("UPDATE users SET totp_secret=?, twofa_enabled=0 WHERE id=?", (encrypted_secret, user['id']))
+                        conn.commit()
+                        conn.close()
+                        
+                        # Generate QR
+                        totp_uri = pyotp.TOTP(secret).provisioning_uri(name=email, issuer_name="Secure Data Access Gateway")
+                        qr_filename = f"qr_{email}.png"
+                        qr_path = os.path.join("static", qr_filename)
+                        img = qrcode.make(totp_uri)
+                        img.save(qr_path)
+                    
+                    # If secret exists but disabled, we assume QR is already there or we need to regen?
+                    # Simply showing existing QR filename logic (which matches email)
+                    qr_filename = f"qr_{email}.png"
+                    
                     session["otp_verified"] = False
                     session["otp_email"] = user['email']
                     
-                    # OTP Logging
-                    app.logger.warning(f"[OTP] Generated for {user['email']} : {otp}")
-                    app.logger.info(f"[AUTH] User logged in: {user['email']}")
-                    
-                except Exception as e:
-                    app.logger.error(f"[ERROR] OTP Generation failed: {e}")
-                    return "Internal Server Error: OTP Failed", 500
-                
-                log_action(user['id'], "User logged in (Password verified)")
-                
-                return redirect(url_for('otp'))
+                    app.logger.info(f"[AUTH] User {user['email']} forced to 2FA Setup")
+                    return render_template("setup_2fa.html", qr_image=f"static/{qr_filename}")
+
+                else:
+                    # Normal Flow: Secret Exists AND Enabled
+                    session["otp_verified"] = False
+                    session["otp_email"] = user['email']
+                    app.logger.info(f"[AUTH] User {user['email']} redirected to 2FA")
+                    return redirect(url_for('otp'))
         
                         
         # Failed Login
@@ -178,10 +199,38 @@ def register():
         conn.execute('INSERT INTO users (fullname, email, password_hash, salt, role) VALUES (?, ?, ?, ?, ?)',
                      (fullname, email, password_hash, salt, role))
         conn.commit()
+        
+        # ---------------------------------------------------
+        # NEW TOTP SETUP FLOW
+        # ---------------------------------------------------
+        
+        # 1. Generate Secret
+        secret = pyotp.random_base32()
+        
+        # 2. Encrypt Secret
+        encrypted_secret = crypto_utils.encrypt_text(secret)
+        
+        # 3. Save key to DB
+        conn.execute(
+            "UPDATE users SET totp_secret=?, twofa_enabled=0 WHERE email=?",
+            (encrypted_secret, email)
+        )
+        conn.commit()
         conn.close()
         
-        flash('Registration successful. Please login.', 'success')
-        return redirect(url_for('login'))
+        # 4. Generate QR Code
+        totp_uri = pyotp.TOTP(secret).provisioning_uri(
+            name=email,
+            issuer_name="Secure Data Access Gateway"
+        )
+        
+        qr_filename = f"qr_{email}.png"
+        qr_path = os.path.join("static", qr_filename)
+        img = qrcode.make(totp_uri)
+        img.save(qr_path)
+        
+        # 5. Show QR Page
+        return render_template("setup_2fa.html", qr_image=f"static/{qr_filename}")
         
     import json
     return render_template("register.html", common_passwords_json=json.dumps(list(COMMON_PASSWORDS)))
@@ -201,18 +250,48 @@ def otp():
 
     if request.method == "POST":
         user_otp = request.form.get("otp")
-        stored_otp = session.get("otp")
         
-        if user_otp == stored_otp:
-            session["otp_verified"] = True
-            log_action(session["user_id"], "OTP verified successfully")
-            app.logger.info(f"[OTP] Verified successfully for {session.get('otp_email', 'unknown')}")
-            flash('Identity verified. Access granted.', 'success')
-            return redirect(url_for("dashboard"))
-        else:
-            log_action(session["user_id"], "OTP verification failed")
-            app.logger.warning(f"[OTP] Verification failed for {session.get('otp_email', 'unknown')}")
-            flash('Invalid OTP. Please try again.', 'error')
+        # TOTP VERIFICATION LOGIC
+        try:
+            conn = get_db_connection()
+            user = conn.execute(
+                "SELECT totp_secret, twofa_enabled FROM users WHERE id=?", 
+                (session["user_id"],)
+            ).fetchone()
+            conn.close()
+
+            # Handle Legacy Users (No Secret or 2FA disabled)
+            if not user or not user["totp_secret"]:
+                app.logger.warning(f"[AUTH] Legacy user login {session.get('email')} - Bypassing 2FA")
+                session["otp_verified"] = True
+                return redirect(url_for("dashboard"))
+
+            # Decrypt Secret
+            secret = crypto_utils.decrypt_text(user["totp_secret"])
+            totp = pyotp.TOTP(secret)
+
+            # Verify (Allowing 1 interval drift = +/- 30 seconds)
+            if totp.verify(user_otp, valid_window=1):
+                # SUCCESS
+                session["otp_verified"] = True
+                
+                # Mark 2FA as enabled if not already
+                if user['twofa_enabled'] == 0:
+                     conn = get_db_connection()
+                     conn.execute("UPDATE users SET twofa_enabled=1 WHERE id=?", (session["user_id"],))
+                     conn.commit()
+                     conn.close()
+                
+                log_action(session["user_id"], "2FA verified successfully")
+                flash('Identity verified. Access granted.', 'success')
+                return redirect(url_for("dashboard"))
+            else:
+                log_action(session["user_id"], "OTP verification failed")
+                flash('Invalid authenticator code', 'error')
+                
+        except Exception as e:
+            app.logger.error(f"TOTP Verification Error: {e}")
+            flash('Two-Factor Authentication Error', 'error')
             
     return render_template("otp.html")
 

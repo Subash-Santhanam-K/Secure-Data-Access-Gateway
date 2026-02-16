@@ -10,7 +10,9 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
-            role TEXT NOT NULL
+            role TEXT NOT NULL,
+            totp_secret TEXT,
+            twofa_enabled INTEGER DEFAULT 0
         )
     ''')
     

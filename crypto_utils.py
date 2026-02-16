@@ -134,3 +134,13 @@ def verify_signature(hash_bytes, signature):
         return True
     except:
         return False
+
+def encrypt_text(text: str) -> str:
+    cipher = get_cipher()
+    encrypted = cipher.encrypt(text.encode())
+    return encrypted.hex()
+
+def decrypt_text(enc_hex: str) -> str:
+    cipher = get_cipher()
+    decrypted = cipher.decrypt(bytes.fromhex(enc_hex))
+    return decrypted.decode()
