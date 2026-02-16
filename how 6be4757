@@ -1,0 +1,35 @@
+[33mcommit 6be47579cb995e7b61ebe983f0e7902546462ed4[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: Subash-Santhanam-K <subsan2006@gmail.com>
+Date:   Mon Feb 16 08:54:36 2026 +0530
+
+    Initial commit - Secure Data Access Gateway
+
+.gitignore
+README.md
+app.py
+cleanup.py
+common_passwords.txt
+create_collaborator.py
+crypto_utils.py
+encoding_utils.py
+init_db.py
+migrate_keys.py
+requirements.txt
+reset_admin.py
+sign_datasets.py
+static/styles.css
+templates/access_dataset.html
+templates/admin_approvals.html
+templates/audit_logs.html
+templates/dashboard.html
+templates/datasets.html
+templates/grant_access.html
+templates/index.html
+templates/login.html
+templates/my_privileges.html
+templates/otp.html
+templates/register.html
+templates/request_access.html
+test_auth.py
+update_schema.py
+verify_pipeline.py

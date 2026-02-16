@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grant Access - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/admin-approvals">Approvals</a>
+            <a href="/admin/grant-access" style="color: var(--accent-primary);">Grant Access</a>
+            <a href="/audit-logs">Audit Logs</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="margin-bottom: 1.5rem; color: var(--accent-primary);">🔑 Direct Access Grant</h2>
+
+            <div class="card">
+                <form method="POST" action="/admin/grant-access">
+
+                    <div>
+                        <label for="user_id">Select User (Collaborator / Researcher)</label>
+                        <select id="user_id" name="user_id" required>
+                            <option value="" disabled selected>Select a user...</option>
+                            {% for user in users %}
+                            <option value="{{ user.id }}">{{ user.fullname }} ({{ user.role }}) - {{ user.email }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="dataset_id">Select Dataset</label>
+                        <select id="dataset_id" name="dataset_id" required>
+                            <option value="" disabled selected>Select a dataset...</option>
+                            {% for ds in datasets %}
+                            <option value="{{ ds.id }}">{{ ds.name }} ({{ ds.sensitivity }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="duration">Access Duration</label>
+                        <select id="duration" name="duration" required>
+                            <option value="1">1 Hour</option>
+                            <option value="24" selected>24 Hours</option>
+                            <option value="168">7 Days</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button type="submit" class="primary" style="width: 100%;">Grant Access</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

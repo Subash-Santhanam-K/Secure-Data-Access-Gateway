@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard" style="color: var(--accent-primary);">Dashboard</a>
+            {% if session.role in ["Researcher", "Collaborator"] %}
+            <a href="/datasets">Datasets</a>
+            <a href="/my-privileges">Privileges</a>
+            {% endif %}
+            {% if session.role == "Admin" %}
+            <a href="/admin-approvals">Approvals</a>
+            <a href="/audit-logs">Audit Logs</a>
+            {% endif %}
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div class="dashboard-header">
+            <div>
+                <h2 class="welcome-msg">Welcome, {{ fullname }}</h2>
+                <div style="margin-top: 0.5rem;">
+                    {% if session.role == "Researcher" %}
+                    <span class="role-badge">🔬 Researcher</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">Full data requester
+                        privileges</span>
+                    {% elif session.role == "Collaborator" %}
+                    <span class="role-badge"
+                        style="border-color: var(--info); color: var(--info); background: rgba(59, 130, 246, 0.1);">👥
+                        Collaborator</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">Restricted data
+                        consumer</span>
+                    {% elif session.role == "Admin" %}
+                    <span class="role-badge"
+                        style="border-color: var(--warning); color: var(--warning); background: rgba(245, 158, 11, 0.1);">⚙️
+                        Admin</span>
+                    <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: 0.5rem;">System
+                        administrator</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Status Panel -->
+        <div class="security-status">
+            <div class="status-item">
+                <span class="icon">🔐</span>
+                <div>
+                    <div class="label">AES-256 Encryption</div>
+                    <div class="value">● ACTIVE</div>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="icon">🔑</span>
+                <div>
+                    <div class="label">RSA Key Protection</div>
+                    <div class="value">● ACTIVE</div>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="icon">🛡️</span>
+                <div>
+                    <div class="label">Digital Signatures</div>
+                    <div class="value">● VERIFIED</div>
+                </div>
+            </div>
+            <div class="status-item">
+                <span class="icon">📜</span>
+                <div>
+                    <div class="label">Audit Logging</div>
+                    <div class="value">● ENABLED</div>
+                </div>
+            </div>
+        </div>
+
+        {% if role in ["Researcher", "Collaborator", "researcher", "collaborator"] %}
+        <h3 class="section-header">Data Operations</h3>
+        <div class="grid-container">
+            <div class="card">
+                <h3>📊 View Datasets</h3>
+                <p>Browse available R&D datasets, check sensitivity levels, and access status.</p>
+                <div class="card-actions">
+                    <a href="/datasets"><button class="primary">Browse Data</button></a>
+                </div>
+            </div>
+
+            {% if session.role == 'Researcher' %}
+            <div class="card">
+                <h3>📝 Request Access</h3>
+                <p>Submit a new request for access to restricted datasets. Requires admin approval.</p>
+                <div class="card-actions">
+                    <a href="/request-access"><button>New Request</button></a>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card">
+                <h3>🎫 My Privileges</h3>
+                <p>View your active dataset permissions, expiration times, and access history.</p>
+                <div class="card-actions">
+                    <a href="/my-privileges"><button>View Privileges</button></a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if role == "Admin" %}
+        <h3 class="section-header">Administration</h3>
+        <div class="grid-container">
+            <div class="card">
+                <h3 style="color: var(--warning);">📋 Access Requests</h3>
+                <p>Review and manage pending access requests from researchers and collaborators.</p>
+                <div class="card-actions">
+                    <a href="/admin-approvals"><button
+                            style="color: var(--warning); border-color: var(--warning);">Manage Requests</button></a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--warning);">🔑 Grant Access</h3>
+                <p>Directly grant dataset access to users.</p>
+                <div class="card-actions">
+                    <a href="/admin/grant-access"><button class="primary"
+                            style="color: var(--warning); border-color: var(--warning);">Grant Access</button></a>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="color: var(--warning);">🔍 Audit Logs</h3>
+                <p>Monitor system activity, access events, and security operations.</p>
+                <div class="card-actions">
+                    <a href="/audit-logs"><button style="color: var(--warning); border-color: var(--warning);">View
+                            Logs</button></a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Privileges - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/datasets">Datasets</a>
+            <a href="/my-privileges" style="color: var(--accent-primary);">Privileges</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 style="margin-bottom: 1.5rem; color: var(--accent-primary);">🎫 My Access Privileges</h2>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Dataset</th>
+                        <th>Permission</th>
+                        <th>Expiry Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in privileges %}
+                    <tr>
+                        <td style="color: var(--text-primary);">{{ p.dataset_name }}</td>
+                        <td><span style="font-family: var(--font-mono); color: var(--info);">READ-ONLY</span></td>
+                        <td style="font-family: var(--font-mono);">{{ p.expiry_time }}</td>
+                        <td>
+                            {% if p.status == 'Active' %}
+                            <span class="status-active">✓ Active</span>
+                            {% elif p.status == 'Expired' %}
+                            <span class="status-expired">✕ Expired</span>
+                            {% else %}
+                            <span class="status-pending">⏳ {{ p.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if p.status == 'Active' %}
+                            <a href="/access-dataset/{{ p.encoded_dataset_id }}"><button
+                                    class="btn-sm btn-access">Access
+                                    Data</button></a>
+                            {% elif p.status == 'Expired' %}
+                            {% if session.role == 'Researcher' %}
+                            <a href="/request-access?dataset_id={{ p.dataset_id }}"><button
+                                    class="btn-sm btn-renew">Renew</button></a>
+                            {% else %}
+                            <button class="btn-sm" disabled>Restricted</button>
+                            {% endif %}
+                            {% else %}
+                            <button class="btn-sm" disabled>Pending</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if privileges | length == 0 %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            No privileges found. Request access to datasets to see them here.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

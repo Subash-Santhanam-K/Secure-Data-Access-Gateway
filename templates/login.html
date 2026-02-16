@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="auth-page">
+    <!-- Toast Container for Flash Messages -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        <div class="auth-container">
+            <h2>🔐 Secure Login</h2>
+            <p class="auth-desc">Enter your credentials to access the secure gateway.</p>
+
+            {% if lockout_end_time %}
+            <p style="color:red; text-align: center; font-weight: bold;">[DEBUG] LOCKOUT MODE ACTIVE</p>
+            {% endif %}
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div>
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="agent@secure.lab" required>
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required>
+                </div>
+
+                <div class="attempt-container" style="margin-bottom: 1rem;">
+                    {% if attempts_remaining is defined %}
+                    {% if attempts_remaining > 1 %}
+                    <div class="alert warning">
+                        <span class="alert-icon">⚠</span>
+                        <div>
+                            <strong>Login Attempts: {{ 5 - attempts_remaining }} / 5</strong><br>
+                            <small>{{ attempts_remaining }} attempts remaining</small>
+                        </div>
+                    </div>
+                    {% elif attempts_remaining == 1 %}
+                    <div class="alert error blink">
+                        <span class="alert-icon">⚠</span>
+                        <div>
+                            <strong>LAST ATTEMPT REMAINING</strong><br>
+                            <small>Account will lock on next failure</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endif %}
+
+                    {% if lockout_end_time %}
+                    <div class="lockout-container">
+                        <div class="lock-icon">🔒</div>
+                        <h3 style="color: var(--error);">ACCOUNT LOCKED</h3>
+                        <p>Too many failed attempts</p>
+                        <div class="timer" id="countdown">00:00</div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="primary" id="loginBtn">Authenticate →</button>
+            </form>
+
+            {% if lockout_end_time %}
+            <script>
+                // Safely parse Jinja variable into JavaScript
+                const endTime = parseInt("{{ lockout_end_time }}", 10) * 1000;
+
+                const timerDisplay = document.getElementById('countdown');
+                const formInputs = document.querySelectorAll('input');
+                const loginBtn = document.getElementById('loginBtn');
+
+                // Disable form
+                formInputs.forEach(i => i.disabled = true);
+                loginBtn.disabled = true;
+                loginBtn.style.opacity = "0.5";
+
+                const timer = setInterval(() => {
+                    const now = new Date().getTime();
+                    const distance = endTime - now;
+
+                    if (distance <= 0) {
+                        clearInterval(timer);
+                        timerDisplay.innerHTML = "UNLOCKED";
+                        timerDisplay.style.color = "var(--success)";
+                        setTimeout(() => window.location.reload(), 2000);
+                        return;
+                    }
+
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                    timerDisplay.innerHTML =
+                        (minutes < 10 ? "0" + minutes : minutes) + ":" +
+                        (seconds < 10 ? "0" + seconds : seconds);
+                }, 1000);
+            </script>
+            {% endif %}
+
+
+            <div class="form-footer">
+                <a href="/register">Need access? Register here</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Auto-remove toasts after animation
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

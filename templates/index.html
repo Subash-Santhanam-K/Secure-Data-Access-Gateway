@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Data Access Gateway - R&D Labs</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="auth-page">
+    <main>
+        <div class="auth-container" style="max-width: 500px;">
+            <h2>🛡️ Secure Data Gateway</h2>
+            <p class="auth-desc">Enterprise-grade data access control for R&D laboratories</p>
+
+            <div
+                style="text-align: left; margin: 2rem 0; padding: 1.5rem; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid var(--border-color);">
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--success);">✓</span>
+                    <span style="color: var(--text-secondary);">AES-256 Encrypted Storage</span>
+                </div>
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--success);">✓</span>
+                    <span style="color: var(--text-secondary);">RSA Key Protection</span>
+                </div>
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--success);">✓</span>
+                    <span style="color: var(--text-secondary);">Digital Signature Verification</span>
+                </div>
+                <div style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--success);">✓</span>
+                    <span style="color: var(--text-secondary);">Two-Factor Authentication</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="color: var(--success);">✓</span>
+                    <span style="color: var(--text-secondary);">NIST SP 800-63B Compliant</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="/login" style="flex: 1;"><button class="primary" style="width: 100%;">Login</button></a>
+                <a href="/register" style="flex: 1;"><button style="width: 100%;">Register</button></a>
+            </div>
+
+            <div class="form-footer" style="margin-top: 2rem;">
+                <small style="color: var(--text-muted);">Protected by Zero-Trust Architecture</small>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

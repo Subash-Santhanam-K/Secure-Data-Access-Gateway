@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Access Dataset - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/datasets">Datasets</a>
+            <a href="/my-privileges">Privileges</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div style="max-width: 900px; margin: 0 auto;">
+            <h2 style="margin-bottom: 1rem; color: var(--accent-primary);">🔓 Dataset Access - ID #{{ dataset_id }}</h2>
+
+            <!-- Security Verification Status -->
+            <div class="security-status" style="margin-bottom: 1.5rem;">
+                <div class="status-item">
+                    <span class="icon">🔐</span>
+                    <div>
+                        <div class="label">Decryption</div>
+                        <div class="value">● SUCCESSFUL</div>
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="icon">🛡️</span>
+                    <div>
+                        <div class="label">Digital Signature</div>
+                        {% if integrity %}
+                        <div class="value">● VERIFIED</div>
+                        {% else %}
+                        <div class="value" style="color: var(--error);">● FAILED</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="status-item">
+                    <span class="icon">✓</span>
+                    <div>
+                        <div class="label">Data Integrity</div>
+                        {% if integrity %}
+                        <div class="value">● INTACT</div>
+                        {% else %}
+                        <div class="value" style="color: var(--error);">● COMPROMISED</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if integrity %}
+            <div class="alert success" style="margin-bottom: 1.5rem;">
+                <span class="alert-icon">✓</span>
+                <span><strong>ACCESS GRANTED</strong> - Data integrity verified. Displaying decrypted content
+                    below.</span>
+            </div>
+            {% else %}
+            <div class="alert error" style="margin-bottom: 1.5rem;">
+                <span class="alert-icon">⚠</span>
+                <span><strong>WARNING</strong> - Data integrity check failed. Content may have been tampered
+                    with.</span>
+            </div>
+            {% endif %}
+
+            <!-- Decrypted Data Display -->
+            <div class="card" style="padding: 0;">
+                <div
+                    style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: var(--text-primary); font-weight: 600;">📄 Decrypted Content</span>
+                    <span class="verification-badge {% if integrity %}verified{% else %}failed{% endif %}">
+                        {% if integrity %}🛡️ SIGNATURE VALID{% else %}⚠️ SIGNATURE INVALID{% endif %}
+                    </span>
+                </div>
+                <div class="data-display">{{ data }}</div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="/my-privileges"><button>← Back to My Privileges</button></a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

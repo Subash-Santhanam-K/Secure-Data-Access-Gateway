@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="auth-page">
+    <!-- Toast Container for Flash Messages -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        <div class="auth-container">
+            <h2>🆔 Create Identity</h2>
+            <p class="auth-desc">Register to request access to secure datasets.</p>
+
+            <form method="POST" action="/register">
+                <div>
+                    <label for="fullname">Full Name</label>
+                    <input type="text" id="fullname" name="fullname" placeholder="John Doe" required>
+                </div>
+
+                <div>
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" placeholder="agent@secure.lab" required>
+                </div>
+
+                <div>
+                    <label for="role">Role</label>
+                    <select id="role" name="role" required>
+                        <option value="">Select Role</option>
+                        <option value="Researcher">Researcher</option>
+                        <option value="Collaborator">Collaborator</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" placeholder="••••••••" required minlength="8">
+                    <div class="password-feedback">
+                        <div
+                            style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem; font-family: var(--font-mono);">
+                            <span id="charCount">Length: 0 / 8 ❌</span>
+                            <span id="strengthLabel" style="font-weight: 600;">WEAK 🔴</span>
+                        </div>
+                        <div class="strength-bar-container">
+                            <div id="strengthBar" class="strength-bar"></div>
+                        </div>
+                        <div id="commonPasswordAlert" class="alert error"
+                            style="display: none; margin-top: 0.5rem; padding: 0.5rem;">
+                            <span class="alert-icon">🚫</span>
+                            <span><strong>COMMON PASSWORD BLOCKED</strong></span>
+                        </div>
+                        <small style="color: var(--text-muted); display: block; margin-top: 0.5rem; font-size: 0.8rem;">
+                            Min 8 chars • No common passwords
+                        </small>
+                    </div>
+                </div>
+
+                <div id="commonPasswordsData" data-passwords='{{ common_passwords_json | safe }}' style="display:none;">
+                </div>
+
+                <script>
+                    const passwordInput = document.getElementById('password');
+                    const charCountDisplay = document.getElementById('charCount');
+                    const strengthLabel = document.getElementById('strengthLabel');
+                    const strengthBar = document.getElementById('strengthBar');
+                    const commonAlert = document.getElementById('commonPasswordAlert');
+                    const submitBtn = document.querySelector('button[type="submit"]');
+
+                    // Parse common passwords from hidden div data attribute
+                    let commonPasswords = [];
+                    try {
+                        const rawData = document.getElementById("commonPasswordsData").dataset.passwords;
+                        commonPasswords = JSON.parse(rawData);
+                    } catch (e) {
+                        console.error("Failed to load common passwords", e);
+                    }
+
+                    passwordInput.addEventListener('input', function () {
+                        const val = this.value;
+                        const len = val.length;
+                        const isCommon = commonPasswords.includes(val.toLowerCase());
+
+                        // Update Char Count
+                        if (len >= 8) {
+                            charCountDisplay.innerHTML = `Length: ${len} / 8 ✅`;
+                            charCountDisplay.style.color = 'var(--success)';
+                        } else {
+                            charCountDisplay.innerHTML = `Length: ${len} / 8 ❌`;
+                            charCountDisplay.style.color = 'var(--error)';
+                        }
+
+                        // Strength Logic
+                        submitBtn.disabled = true;
+                        submitBtn.style.opacity = "0.5";
+                        commonAlert.style.display = 'none';
+                        passwordInput.style.borderColor = 'var(--border-color)';
+
+                        // Reset classes
+                        strengthBar.className = 'strength-bar';
+
+                        if (isCommon) {
+                            strengthLabel.innerHTML = "BLOCKED 🔥";
+                            strengthLabel.style.color = "var(--error)";
+                            strengthBar.classList.add('blocked');
+                            commonAlert.style.display = 'flex';
+                            passwordInput.style.borderColor = 'var(--error)';
+                            passwordInput.classList.add('shake');
+                            setTimeout(() => passwordInput.classList.remove('shake'), 500);
+                        } else if (len < 8) {
+                            strengthLabel.innerHTML = "WEAK 🔴";
+                            strengthLabel.style.color = "var(--error)";
+                            strengthBar.classList.add('weak');
+                        } else if (len >= 8 && len < 12) {
+                            strengthLabel.innerHTML = "MODERATE 🟡";
+                            strengthLabel.style.color = "var(--warning)";
+                            strengthBar.classList.add('moderate');
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = "1";
+                        } else {
+                            strengthLabel.innerHTML = "STRONG 🟢";
+                            strengthLabel.style.color = "var(--success)";
+                            strengthBar.classList.add('strong');
+                            submitBtn.disabled = false;
+                            submitBtn.style.opacity = "1";
+                        }
+                    });
+                </script>
+
+                <button type="submit" class="primary">Create Account →</button>
+            </form>
+
+            <div class="form-footer">
+                <a href="/login">Already registered? Login here</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Request Access - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/datasets">Datasets</a>
+            <a href="/my-privileges">Privileges</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="margin-bottom: 1.5rem; color: var(--accent-primary);">📝 Request Dataset Access</h2>
+
+            <div class="card" style="padding: 2rem;">
+                <form method="POST" action="/request-access">
+                    <div>
+                        <label for="dataset">Select Dataset</label>
+                        <select id="dataset" name="dataset" required>
+                            <option value="">-- Choose a dataset --</option>
+                            {% for d in datasets %}
+                            <option value="{{ d.id }}" {% if selected_dataset==d.id|string %}selected{% endif %}>
+                                {{ d.name }} ({{ d.sensitivity }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="purpose">Purpose of Access</label>
+                        <textarea id="purpose" name="purpose" rows="4"
+                            placeholder="Describe why you need access to this dataset..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label for="duration">Access Duration</label>
+                        <select id="duration" name="duration" required>
+                            <option value="1h">1 Hour</option>
+                            <option value="6h">6 Hours</option>
+                            <option value="24h" selected>24 Hours</option>
+                            <option value="7d">7 Days</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <button type="submit" class="primary" style="width: 100%;">Submit Request →</button>
+                    </div>
+                </form>
+            </div>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="/datasets">← Back to Datasets</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Approvals - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/admin-approvals" style="color: var(--accent-primary);">Approvals</a>
+            <a href="/audit-logs">Audit Logs</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 style="margin-bottom: 1.5rem; color: var(--warning);">📋 Pending Access Requests</h2>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Request ID</th>
+                        <th>User</th>
+                        <th>Dataset</th>
+                        <th>Purpose</th>
+                        <th>Duration</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in requests %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ r.id }}</td>
+                        <td style="color: var(--text-primary);">{{ r.email }}</td>
+                        <td>{{ r.dataset_name }}</td>
+                        <td>{{ r.purpose }}</td>
+                        <td style="font-family: var(--font-mono);">{{ r.duration }}h</td>
+                        <td><span class="status-pending">⏳ {{ r.status }}</span></td>
+                        <td>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <form method="POST" action="/approve-request" style="margin: 0;">
+                                    <input type="hidden" name="request_id" value="{{ r.id }}">
+                                    <button type="submit" class="btn-sm btn-approve">✓ Approve</button>
+                                </form>
+                                <form method="POST" action="/reject-request" style="margin: 0;">
+                                    <input type="hidden" name="request_id" value="{{ r.id }}">
+                                    <button type="submit" class="btn-sm btn-reject">✕ Reject</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% if requests | length == 0 %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">
+                            No pending requests at this time.
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

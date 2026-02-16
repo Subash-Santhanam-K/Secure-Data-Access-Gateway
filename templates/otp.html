@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2FA Verification - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body class="auth-page">
+    <!-- Toast Container for Flash Messages -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <main>
+        <div class="auth-container">
+            <h2>🔑 Two-Factor Auth</h2>
+            <p class="auth-desc">A verification code has been generated. Enter it below to complete authentication.</p>
+
+            <div class="alert info" style="margin-bottom: 1.5rem;">
+                <span class="alert-icon">💻</span>
+                <span>Check your terminal/console for the OTP code.</span>
+            </div>
+
+            <form action="/otp" method="POST">
+                <div>
+                    <label for="otp">One-Time Password</label>
+                    <input type="text" id="otp" name="otp" placeholder="000000" pattern="\d{6}" maxlength="6"
+                        style="text-align: center; letter-spacing: 0.75em; font-size: 1.5rem; font-family: var(--font-mono);"
+                        required>
+                </div>
+
+                <button type="submit" class="primary">Verify Identity →</button>
+            </form>
+
+            <div class="form-footer">
+                <p style="color: var(--text-muted);">Didn't receive the code?</p>
+                <a href="/login">Return to Login</a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>

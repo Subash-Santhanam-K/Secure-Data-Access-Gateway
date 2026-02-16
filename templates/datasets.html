@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datasets - Secure Data Access Gateway</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="toast {{ category }}">
+            <span class="toast-icon">
+                {% if category == 'success' %}✓{% elif category == 'error' %}✕{% elif category == 'warning' %}⚠{% else
+                %}ℹ{% endif %}
+            </span>
+            <div class="toast-content">
+                <div class="toast-message">{{ message }}</div>
+            </div>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+    </div>
+
+    <header>
+        <h1>Secure Data Gateway</h1>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/datasets" style="color: var(--accent-primary);">Datasets</a>
+            <a href="/my-privileges">Privileges</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 style="margin-bottom: 1.5rem; color: var(--accent-primary);">📊 Available Datasets</h2>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Dataset Name</th>
+                        <th>Sensitivity</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in datasets %}
+                    <tr>
+                        <td style="font-family: var(--font-mono);">#{{ d.id }}</td>
+                        <td style="color: var(--text-primary);">{{ d.name }}</td>
+                        <td>
+                            {% if d.sensitivity == 'High' %}
+                            <span style="color: var(--error);">● {{ d.sensitivity }}</span>
+                            {% elif d.sensitivity == 'Medium' %}
+                            <span style="color: var(--warning);">● {{ d.sensitivity }}</span>
+                            {% else %}
+                            <span style="color: var(--success);">● {{ d.sensitivity }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ d.description }}</td>
+
+                        {% if d.id in pending_ids %}
+                        <td><span class="status-pending">⏳ Pending</span></td>
+                        <td><button class="btn-sm" disabled>Requested</button></td>
+                        {% else %}
+                        <td><span class="status-denied">🔒 Not Authorized</span></td>
+                        <td>
+                            {% if session.role == "Researcher" %}
+                            <div class="dataset-actions">
+                                <form action="/request-access" method="GET">
+                                    <input type="hidden" name="dataset_id" value="{{ d.id }}">
+                                    <button class="btn-sm primary">Request Access</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <button class="btn-sm" disabled>Restricted</button>
+                            {% endif %}
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        setTimeout(() => {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+        }, 4000);
+    </script>
+</body>
+
+</html>
